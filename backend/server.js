@@ -40,7 +40,13 @@ Return ONLY a JSON array of objects, with NO markdown formatting, NO explanation
   "timeComplexity": string,
   "spaceComplexity": string,
   "description": string,
-  "code": string (Java code),
+  "code": {
+  "javaCode": string (Java code),
+  "pythonCode": string (Python code),
+  "cppCode": string (C++ code),
+  "jsCode": string (JavaScript code),
+  }
+  
   "pros": string[],
   "cons": string[],
   "videoDuration": string (format: "5:23"),
@@ -54,6 +60,9 @@ ${question}`;
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
+
+    console.log(text);
+    
     
     // Clean the response and parse as JSON
     const cleanedText = cleanJsonResponse(text);
