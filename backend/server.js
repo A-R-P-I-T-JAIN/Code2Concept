@@ -129,26 +129,78 @@ ${question}`;
 
 async function generateManimScript(code) {
   const scriptId = uuidv4();
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-  const prompt = `You are an expert in the Manim animation library.
+//   const prompt = `You are an expert in the Manim animation library.
 
-Generate a clean, error-free Manim script that visually demonstrates the working of the given Java algorithm using a specific example input. Do not show or animate the code. The goal is to help viewers understand the algorithm visually.
+// Generate a clean, error-free Manim script that visually demonstrates the working of the given Java algorithm using a specific example input. Do not show or animate the code. The goal is to help viewers understand the algorithm visually.
 
-Constraints:
-- Do not include or reference the original code in the video.
-- Explain the algorithm only through animations using a step-by-step example.
-- Use appropriate Manim classes like Rectangle, Text, VGroup, and Arrow.
-- Animate index pointers (like i and j), variable values (like sum, count), and array traversal clearly.
-- Ensure all elements are visible within screen bounds and do not overlap.
-- Make sure the text or any element does not overlap with each other. Everything should be clearly visible on the screen.
-- There should be proper spacing between texts and any other element.
-- All texts, shapes, and animations should be well-aligned and spaced.
-- Return only the Manim Python code, nothing else. Do not include markdown formatting.
+// Constraints:
+// - Do not include or reference the original code in the video.
+// - Explain the algorithm only through animations using a step-by-step example.
+// - Use appropriate Manim classes like Rectangle, Text, VGroup, and Arrow.
+// - Animate index pointers (like i and j), variable values (like sum, count), and array traversal clearly.
+// - Ensure all elements are visible within screen bounds and do not overlap.
+// - Make sure the text or any element does not overlap with each other. Everything should be clearly visible on the screen.
+// - There should be proper spacing between texts and any other element.
+// - All texts, shapes, and animations should be well-aligned and spaced.
+// - Return only the Manim Python code, nothing else. Do not include markdown formatting.
 
-code:
-${code}
-`;
+// code:
+// ${code}
+// `;
+
+const prompt = `You are an expert in the Manim animation library specializing in algorithm visualization.
+
+Generate a clean, well-structured Manim script that visually demonstrates the given Java algorithm using a specific, carefully chosen example input. Focus on creating intuitive animations that explain the algorithm's logic without showing any code.
+
+Requirements:
+1. Visualization Approach:
+   - Use a clear example input that showcases the algorithm's key operations
+   - Example: For a sorting algorithm, use [5, 2, 4, 6, 1, 3]
+   - For graph algorithms, use a simple graph with 4-5 nodes
+   - For mathematical algorithms, choose input that demonstrates 2-3 steps
+
+2. Visual Elements:
+   - Arrays: Use Rectangle elements with Text labels (like Square(side_length=1.0))
+   - Pointers: Use colored arrows (like Arrow) or labeled markers (like Text("i").next_to(element))
+   - Variables: Display important variables in a fixed position (like top-right corner)
+   - Groups: Use VGroup and HGroup for proper alignment of elements
+   - Text: Use large enough font_size (at least 24) with good contrast
+
+3. Animation Sequence:
+   - Start by displaying the initial state
+   - Animate each logical step with appropriate transitions:
+     * FadeIn for new elements
+     * Transform for value changes
+     * Movement for pointer traversal
+   - Highlight comparisons/swaps/updates with color changes
+   - Pause briefly after key steps (using Wait)
+
+4. Layout Guidelines:
+   - Maintain consistent spacing (at least 0.5 units between elements)
+   - Keep all elements within the visible area (x_range [-6,6], y_range [-4,4])
+   - Use alignment tools like .arrange(RIGHT, buff=0.5) and .next_to()
+   - Group related elements and animate them together when appropriate
+
+5. Style Requirements:
+   - Use a color scheme that's visually distinct but not overwhelming
+   - Example pointer colors: RED for 'i', BLUE for 'j', GREEN for result
+   - Add subtle highlights (like flash) for important operations
+   - Include concise text explanations when helpful (but minimal)
+
+Example Structure for a Sorting Algorithm:
+1. Create array elements
+2. Show initial pointer positions
+3. Animate comparison with color change
+4. Show swap if needed with movement animation
+5. Update pointers
+6. Repeat until sorted
+
+Return only the complete Python code for the Manim script, without any additional explanation or markdown formatting. The code should be fully functional and follow Manim best practices for animation smoothness and clarity.
+
+Java Algorithm to Visualize:
+${code}`
 
   try {
     const result = await model.generateContent(prompt);
