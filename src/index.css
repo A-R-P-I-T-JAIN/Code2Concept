@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme {
+   --color-primary: #050505;
+  --color-algo-blue: #2563eb;
+  --color-algo-purple: #7c3aed;
+  --color-code-bg: #1e293b;
+  --color-text-light: #e2e8f0;
+}
+
+body {
+  @apply bg-primary text-text-light font-sans;
+  scroll-behavior: smooth;
+}
+
+/* Animated gradient text */
+.text-algo-gradient {
+  @apply bg-gradient-to-r from-algo-blue to-algo-purple bg-clip-text text-transparent;
+}
+
+/* Pulse animation for CTA */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+.animate-pulse-slow {
+  animation: pulse 3s ease-in-out infinite;
+}
+
+
+
+
+
