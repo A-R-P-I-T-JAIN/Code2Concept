@@ -10,7 +10,7 @@ const QuestionInputForm = ({ onGenerate }) => {
     e.preventDefault();
     if (questionText.trim()) {
       console.log('Question submitted:', questionText);
-      onGenerate(questionText);
+      onGenerate({ url: questionText, type: 'url' });
     }
   };
 
