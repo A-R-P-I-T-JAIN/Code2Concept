@@ -4,6 +4,7 @@ const VideoContext = createContext();
 
 export const VideoProvider = ({ children }) => {
   const [videoUrls, setVideoUrls] = useState({});
+  const [requestedVideos, setRequestedVideos] = useState({});
 
   const setVideoUrl = (approachId, url) => {
     setVideoUrls(prev => ({
@@ -16,8 +17,24 @@ export const VideoProvider = ({ children }) => {
     return videoUrls[approachId];
   };
 
+  const setVideoRequested = (approachId, requested) => {
+    setRequestedVideos(prev => ({
+      ...prev,
+      [approachId]: requested
+    }));
+  };
+
+  const isVideoRequested = (approachId) => {
+    return requestedVideos[approachId] || false;
+  };
+
   return (
-    <VideoContext.Provider value={{ setVideoUrl, getVideoUrl }}>
+    <VideoContext.Provider value={{ 
+      setVideoUrl, 
+      getVideoUrl, 
+      setVideoRequested, 
+      isVideoRequested 
+    }}>
       {children}
     </VideoContext.Provider>
   );
@@ -29,4 +46,4 @@ export const useVideo = () => {
     throw new Error('useVideo must be used within a VideoProvider');
   }
   return context;
-}; 
+};
