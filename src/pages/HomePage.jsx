@@ -25,7 +25,7 @@ const HomePage = () => {
               <span className="block sm:inline">{error}</span>
             </div>
           )}
-          <SearchInput onGenerate={handleGenerate} disabled={loading} />
+          {/* <SearchInput onGenerate={handleGenerate} disabled={loading} /> */}
           <QuestionInputForm onGenerate={handleGenerate} disabled={loading} />
         </div>
       </main>
