@@ -159,7 +159,7 @@ async function generateManimScript(code) {
 const prompt = `You are an expert in the Manim animation library specializing in algorithm visualization.
 
 Generate a clean, well-structured Manim script that visually demonstrates the given Java algorithm using a specific, carefully chosen example input. Focus on creating intuitive animations that explain the algorithm's logic without showing any code.
-
+Always starts with the approach title, then make it display in the top left corner of the screen in the small font size.
 Requirements:
 1. Visualization Approach:
    - Use a clear example input that showcases the algorithm's key operations
@@ -255,7 +255,12 @@ app.post('/api/getAnimation', async (req, res) => {
     console.log("---------------------");
     console.log("Generating animation for approach:", approach.title);
 
-    const { scriptContent, scriptId } = await generateManimScript(approach.code);
+    let code = approach.code.javaCode 
+        || approach.code.cppCode 
+        || approach.code.pythonCode 
+        || approach.code.jsCode;
+
+const { scriptContent, scriptId } = await generateManimScript(code);
     console.log('Generated Manim script with ID:', scriptId);
 
     // Create a unique directory for this render
