@@ -102,7 +102,13 @@ Return ONLY a JSON array of objects, with NO markdown formatting, NO explanation
   "timeComplexity": string,
   "spaceComplexity": string,
   "description": string,
-  "code": string (Java code),
+  "code": {
+  "javaCode": string (Java code),
+  "pythonCode": string (Python code),
+  "cppCode": string (C++ code),
+  "jsCode": string (JavaScript code),
+  }
+  
   "pros": string[],
   "cons": string[],
   "concepts": string[]

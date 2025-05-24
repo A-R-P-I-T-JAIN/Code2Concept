@@ -269,9 +269,9 @@ const VideoSection = ({ approach, isPlaying, togglePlay }) => {
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="bg-slate-800/70 rounded-xl border border-slate-700 overflow-hidden shadow-xl h-full">
-      <div className="border-b border-slate-700 p-4 bg-slate-800/50">
-        <h2 className="text-xl font-semibold">Interactive Explanation</h2>
+    <div className="bg-[#8B7355] rounded-xl border border-[#2C2522] overflow-hidden shadow-xl h-full">
+      <div className="border-b border-[#2C2522] p-4 bg-[#8B7355]">
+        <h2 className="text-xl font-semibold text-[#e6ddd6]">Interactive Explanation</h2>
       </div>
       
       <div className="p-6 h-full flex flex-col">
@@ -287,9 +287,9 @@ const VideoSection = ({ approach, isPlaying, togglePlay }) => {
             onClick={handlePlayPause}
           >
             {isLoading ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80">
-                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-                <span className="ml-2 text-blue-500">Loading animation...</span>
+              <div className="absolute inset-0 flex items-center justify-center bg-[#2C2522]/90">
+                <Loader2 className="w-8 h-8 text-[#8B7355] animate-spin" />
+                <span className="ml-2 text-[#8B7355]">Loading animation...</span>
               </div>
             ) : videoUrl ? (
               <video
@@ -304,8 +304,8 @@ const VideoSection = ({ approach, isPlaying, togglePlay }) => {
                 onError={(e) => console.error('Video error:', e)}
               />
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80">
-                <span className="text-red-500">Failed to load animation</span>
+              <div className="absolute inset-0 flex items-center justify-center bg-[#2C2522]/90">
+                <span className="text-[#8B7355]">Failed to load animation</span>
               </div>
             )}
             
@@ -313,134 +313,51 @@ const VideoSection = ({ approach, isPlaying, togglePlay }) => {
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="absolute inset-0 flex items-center justify-center bg-black/50 z-10"
+                className="absolute inset-0 flex items-center justify-center bg-[#2C2522]/80"
               >
                 <div className="text-center">
-                  <div className="w-20 h-20 bg-slate-700/80 rounded-full flex items-center justify-center mb-4 mx-auto hover:bg-slate-600/80 transition-colors">
-                    <Play className="w-8 h-8 text-white ml-1" />
+                  <div className="w-20 h-20 bg-[#8B7355] rounded-full flex items-center justify-center mb-4 mx-auto hover:bg-[#6B574A] transition-colors">
+                    <Play className="w-8 h-8 text-[#e6ddd6] ml-1" />
                   </div>
-                  <h3 className="text-lg font-medium mb-2">Step-by-Step Walkthrough</h3>
+                  <h3 className="text-lg font-medium mb-2 text-[#e6ddd6]">Step-by-Step Walkthrough</h3>
                 </div>
               </motion.div>
             )}
-
-            {/* Enhanced Video Controls */}
-            <AnimatePresence>
-              {(showControls || !isPlaying) && !isLoading && videoUrl && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-4 z-20"
-                >
-                  {/* Progress Bar */}
-                  <div className="mb-3">
-                    <div 
-                      ref={progressRef}
-                      className="w-full h-2 bg-white/20 rounded-full cursor-pointer relative group hover:h-3 transition-all"
-                      onClick={handleProgressClick}
-                      onMouseDown={handleProgressMouseDown}
-                    >
-                      <div 
-                        className="h-full bg-blue-500 rounded-full relative transition-all duration-150"
-                        style={{ width: `${progressPercentage}%` }}
-                      >
-                        <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-blue-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity -mr-1.5 shadow-lg" />
-                      </div>
-                      {/* Hover preview */}
-                      <div className="absolute top-0 h-full w-full opacity-0 hover:opacity-20 bg-white rounded-full transition-opacity" />
-                    </div>
-                    <div className="flex justify-between text-xs text-white/70 mt-1">
-                      <span>{formatTime(currentTime)}</span>
-                      <span>{formatTime(duration)}</span>
-                    </div>
-                  </div>
-
-                  {/* Control Buttons */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <button
-                        className="bg-black/50 rounded-full p-2 hover:bg-black/70 transition-colors"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePlayPause();
-                        }}
-                      >
-                        {isPlaying ? (
-                          <Pause className="w-5 h-5 text-white" />
-                        ) : (
-                          <Play className="w-5 h-5 text-white ml-0.5" />
-                        )}
-                      </button>
-
-                      <button
-                        className="bg-black/50 rounded-full p-2 hover:bg-black/70 transition-colors"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRestart();
-                        }}
-                        title="Restart"
-                      >
-                        <RotateCcw className="w-4 h-4 text-white" />
-                      </button>
-
-                      <button
-                        className="bg-black/50 rounded-full p-2 hover:bg-black/70 transition-colors"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSkipForward();
-                        }}
-                        title="Skip 10s"
-                      >
-                        <SkipForward className="w-4 h-4 text-white" />
-                      </button>
-
-                      {/* Volume Controls */}
-                      <div className="flex items-center gap-2 ml-2">
-                        <button
-                          className="bg-black/50 rounded-full p-2 hover:bg-black/70 transition-colors"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleMute();
-                          }}
-                        >
-                          {isMuted ? (
-                            <VolumeX className="w-4 h-4 text-white" />
-                          ) : (
-                            <Volume2 className="w-4 h-4 text-white" />
-                          )}
-                        </button>
-                        <input
-                          type="range"
-                          min="0"
-                          max="1"
-                          step="0.1"
-                          value={isMuted ? 0 : volume}
-                          onChange={handleVolumeChange}
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-16 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer slider"
-                        />
-                      </div>
-                    </div>
-
-                    <button
-                      className="bg-black/50 rounded-full p-2 hover:bg-black/70 transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleFullscreen();
-                      }}
-                    >
-                      {isFullscreen ? (
-                        <Minimize2 className="w-5 h-5 text-white" />
-                      ) : (
-                        <Maximize2 className="w-5 h-5 text-white" />
-                      )}
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </motion.div>
+          
+          <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center z-20">
+            {isPlaying && !isLoading && videoUrl && (
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-black/50 rounded-full p-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePlayPause();
+                }}
+              >
+                <Pause className="w-5 h-5 text-white" />
+              </motion.button>
+            )}
+            
+            {!isLoading && videoUrl && (
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                className="bg-black/50 rounded-full p-2 ml-auto"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleFullscreen();
+                }}
+              >
+                {isFullscreen ? (
+                  <Minimize2 className="w-5 h-5 text-white" />
+                ) : (
+                  <Maximize2 className="w-5 h-5 text-white" />
+                )}
+              </motion.button>
+            )}
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -450,7 +367,7 @@ const VideoSection = ({ approach, isPlaying, togglePlay }) => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handlePlayPause}
-                className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-4 py-2 rounded-lg transition-colors shadow-md"
+                className="flex items-center gap-2 bg-[#6B574A] hover:bg-[#8B7355] px-4 py-2 rounded-lg transition-colors shadow-md text-[#e6ddd6]"
               >
                 {isPlaying ? (
                   <>
@@ -476,7 +393,7 @@ const VideoSection = ({ approach, isPlaying, togglePlay }) => {
           <div>
             <button 
               onClick={() => toggleSection('videoDetails')}
-              className="flex items-center gap-2 w-full text-left mb-2"
+              className="flex items-center gap-2 w-full text-left mb-2 text-[#2C2522]"
             >
               {expandedSections.videoDetails ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
               <span className="font-medium">Video Details</span>
@@ -494,29 +411,29 @@ const VideoSection = ({ approach, isPlaying, togglePlay }) => {
                   }}
                   className="overflow-hidden space-y-4"
                 >
-                  <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
-                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                  <div className="bg-[#8B7355]/20 rounded-lg p-4 border border-[#2C2522]">
+                    <h4 className="font-medium mb-2 flex items-center gap-2 text-[#2C2522]">
                       <BookOpen className="w-4 h-4" />
                       What you'll learn:
                     </h4>
-                    <ul className="text-sm text-gray-300 space-y-1">
+                    <ul className="text-sm text-[#2C2522] space-y-1">
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-400">•</span>
+                        <span className="text-[#6B574A]">•</span>
                         <span>Problem breakdown and analysis</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-400">•</span>
+                        <span className="text-[#6B574A]">•</span>
                         <span>Step-by-step solution walkthrough</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-400">•</span>
+                        <span className="text-[#6B574A]">•</span>
                         <span>Time and space complexity analysis</span>
                       </li>
                     </ul>
                   </div>
 
-                  <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
-                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                  <div className="bg-[#8B7355]/20 rounded-lg p-4 border border-[#2C2522]">
+                    <h4 className="font-medium mb-2 flex items-center gap-2 text-[#2C2522]">
                       <Zap className="w-4 h-4" />
                       Key Concepts:
                     </h4>
@@ -525,7 +442,7 @@ const VideoSection = ({ approach, isPlaying, togglePlay }) => {
                         <motion.span
                           key={index}
                           whileHover={{ scale: 1.05 }}
-                          className="bg-blue-600/20 text-blue-300 px-2 py-1 rounded text-xs"
+                          className="bg-[#6B574A] text-[#e6ddd6] px-2 py-1 rounded text-xs"
                         >
                           {concept}
                         </motion.span>

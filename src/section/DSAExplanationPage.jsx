@@ -18,23 +18,30 @@ const DSAExplanationPage = ({ questionData, onBack }) => {
   const { approaches, title } = questionData;
 
   return (
-    <div className="min-h-screen via-slate-800 to-slate-700 text-white">
+    <div className="min-h-screen bg-[#] text-[#2C2522] relative">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-40">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `radial-gradient(#8B7355 1px, transparent 1px)`,
+          backgroundSize: '30px 30px'
+        }}></div>
+      </div>
      
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-10"
+        className="bg-[#e6ddd6] backdrop-blur-sm border-b border-[#8B7355] sticky top-0 z-10"
       >
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <button
               onClick={onBack}
-              className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors group"
+              className="flex items-center gap-2 text-[#2C2522] hover:text-[#8B7355] transition-colors group"
             >
               <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
               <span>Back to Search</span>
             </button>
-            <h1 className="text-xl font-semibold">{title}</h1>
+            <h1 className="text-2xl font-bold text-[#2C2522]">{title}</h1>
             <div className="flex items-center gap-2">
               
             </div>
@@ -42,7 +49,7 @@ const DSAExplanationPage = ({ questionData, onBack }) => {
         </div>
       </motion.div>
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-6 py-8 relative ">
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
