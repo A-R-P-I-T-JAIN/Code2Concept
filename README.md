@@ -1,12 +1,109 @@
-# React + Vite
+## Getting Started
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### Prerequisites
+- Node.js (Latest LTS version recommended)
+- npm (comes with Node.js)
+- Python 3.7 or higher
+- Manim (for animation generation)
+- MathTeX (for mathematical notation rendering)(not necessary but may require sometimes)
 
-Currently, two official plugins are available:
+#### Installing Python
+1. Download Python from the [official website](https://www.python.org/downloads/)
+2. During installation, make sure to check "Add Python to PATH"
+3. Verify installation by opening a terminal and running:
+```bash
+python --version
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+#### Installing Manim
+1. Install Manim using pip:
+```bash
+pip install manim
+```
 
-## Expanding the ESLint configuration
+2. Install additional dependencies:
+   - For Windows:
+     ```bash
+     # Install MiKTeX (LaTeX distribution)
+     # Download from: https://miktex.org/download
+     
+     # Install FFmpeg
+     # Download from: https://ffmpeg.org/download.html
+     # Add FFmpeg to your system PATH
+     ```
+   - For macOS:
+     ```bash
+     brew install py3cairo ffmpeg
+     ```
+   - For Linux:
+     ```bash
+     sudo apt update
+     sudo apt install libcairo2-dev libpango1.0-dev ffmpeg
+     ```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+3. Verify Manim installation:
+```bash
+manim --version
+```
+
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd <project-directory>
+```
+
+2. Install frontend dependencies:
+```bash
+npm install
+```
+
+3. Install backend dependencies:
+```bash
+cd backend
+npm install
+
+```
+
+### Running the Application
+
+#### Frontend Development
+To start the frontend development server:
+```bash
+npm run dev
+```
+This will start the Vite development server with hot module replacement (HMR) enabled.
+
+#### Backend Development
+To start the backend server in development mode:
+```bash
+cd backend
+npm run dev
+```
+This will start the backend server with nodemon for automatic reloading.
+
+To start the backend server in production mode:
+```bash
+cd backend
+npm start
+```
+
+#### Building for Production
+To create a production build of the frontend:
+```bash
+npm run build
+```
+
+To preview the production build locally:
+```bash
+npm run preview
+```
+
+#### Linting
+To run ESLint and check for code issues:
+```bash
+npm run lint
+```
+

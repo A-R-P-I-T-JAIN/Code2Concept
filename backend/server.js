@@ -20,8 +20,10 @@ app.use(express.json());
 
 const rendersDir = path.join(__dirname, 'renders');
 const videosDir = path.join(__dirname, 'videos');
+const audioDir = path.join(__dirname, 'audio');
 fs.mkdirSync(rendersDir, { recursive: true });
 fs.mkdirSync(videosDir, { recursive: true });
+fs.mkdirSync(audioDir, { recursive: true });
 
 // Function to recursively delete directory
 function deleteDirectory(dirPath) {
@@ -66,26 +68,182 @@ function findVideoFile(dir, baseName = '') {
 
 // Function to clean JSON response
 function cleanJsonResponse(text) {
-  // Remove markdown code block syntax if present
   text = text.replace(/```json\n?/g, '');
   text = text.replace(/```\n?/g, '');
-  
-  // Remove any leading/trailing whitespace
   text = text.trim();
-  
   return text;
 }
 
 // Function to clean Python code response
 function cleanPythonResponse(text) {
-  // Remove markdown code block syntax if present
   text = text.replace(/```python\n?/g, '');
   text = text.replace(/```\n?/g, '');
-  
-  // Remove any leading/trailing whitespace
   text = text.trim();
-  
   return text;
+}
+
+// Function to generate narration steps
+async function generateNarrationSteps(code) {
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+  const prompt = `You are an expert DSA educator. Generate clear, concise narration steps that explain what's happening in the algorithm visualization.
+
+Create a JSON array of narration steps. Each step should be a short, clear sentence that explains what's happening at that moment in the algorithm execution.
+
+Requirements:
+- Each step should be 1-2 sentences maximum
+- Use simple, clear language suitable for audio narration
+- Focus on the key operations: comparisons, swaps, movements, updates
+- Explain the "why" behind each action when relevant
+- Keep each step under 150 characters for natural speech flow
+
+Return ONLY a JSON array of strings, no markdown formatting.
+
+Example format:
+[
+  "We start with an unsorted array of 6 elements",
+  "The algorithm compares the first two elements: 5 and 2",
+  "Since 5 is greater than 2, we swap their positions",
+  "Now we move to the next pair and repeat the comparison"
+]
+
+Algorithm code:
+${code}`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    const cleanedText = cleanJsonResponse(text);
+    const steps = JSON.parse(cleanedText);
+    console.log("Generated narration steps:", steps);
+    return steps;
+  } catch (error) {
+    console.error('Error generating narration steps:', error);
+    throw error;
+  }
+}
+
+// Function to generate text-to-speech audio
+async function generateAudio(narrationSteps, audioId) {
+  try {
+    const audioFilePath = path.join(audioDir, `${audioId}.wav`);
+    const fullNarration = narrationSteps.join('. ');
+    
+    console.log('Generating audio for narration:', fullNarration.substring(0, 100) + '...');
+
+    // Using pyttsx3 for text-to-speech (you'll need to install it: pip install pyttsx3)
+    const pythonScript = `
+import pyttsx3
+import sys
+
+def generate_speech(text, output_path):
+    engine = pyttsx3.init()
+    
+    # Set properties
+    engine.setProperty('rate', 150)  # Speed of speech
+    engine.setProperty('volume', 0.8)  # Volume level (0.0 to 1.0)
+    
+    # Get available voices
+    voices = engine.getProperty('voices')
+    if len(voices) > 1:
+        engine.setProperty('voice', voices[1].id)  # Use female voice if available
+    
+    # Save to file
+    engine.save_to_file(text, output_path)
+    engine.runAndWait()
+    print(f"Audio saved to: {output_path}")
+
+if __name__ == "__main__":
+    text = """${fullNarration.replace(/"/g, '\\"')}"""
+    output_path = "${audioFilePath.replace(/\\/g, '\\\\')}"
+    generate_speech(text, output_path)
+`;
+
+    const scriptPath = path.join(audioDir, `${audioId}_script.py`);
+    fs.writeFileSync(scriptPath, pythonScript);
+
+    return new Promise((resolve, reject) => {
+      const pythonProcess = spawn('python', [scriptPath], {
+        stdio: ['pipe', 'pipe', 'pipe']
+      });
+
+      let output = '';
+      let errorOutput = '';
+
+      pythonProcess.stdout.on('data', (data) => {
+        output += data.toString();
+      });
+
+      pythonProcess.stderr.on('data', (data) => {
+        errorOutput += data.toString();
+      });
+
+      pythonProcess.on('close', (code) => {
+        // Clean up the script file
+        try {
+          fs.unlinkSync(scriptPath);
+        } catch (err) {
+          console.error('Error cleaning up script file:', err);
+        }
+
+        if (code === 0 && fs.existsSync(audioFilePath)) {
+          console.log('Audio generated successfully');
+          resolve(audioFilePath);
+        } else {
+          console.error('Audio generation failed:', errorOutput);
+          reject(new Error(`Audio generation failed: ${errorOutput}`));
+        }
+      });
+
+      pythonProcess.on('error', (error) => {
+        reject(new Error(`Failed to start audio generation: ${error.message}`));
+      });
+    });
+  } catch (error) {
+    console.error('Error in generateAudio:', error);
+    throw error;
+  }
+}
+
+// Function to combine video and audio using FFmpeg
+async function combineVideoAndAudio(videoPath, audioPath, outputPath) {
+  return new Promise((resolve, reject) => {
+    const ffmpeg = spawn('ffmpeg', [
+      '-i', videoPath,           // Input video
+      '-i', audioPath,           // Input audio
+      '-c:v', 'copy',            // Copy video stream without re-encoding
+      '-c:a', 'aac',             // Encode audio to AAC
+      '-shortest',               // End when shortest stream ends
+      '-y',                      // Overwrite output file
+      outputPath
+    ]);
+
+    let output = '';
+    let errorOutput = '';
+
+    ffmpeg.stdout.on('data', (data) => {
+      output += data.toString();
+    });
+
+    ffmpeg.stderr.on('data', (data) => {
+      errorOutput += data.toString();
+    });
+
+    ffmpeg.on('close', (code) => {
+      if (code === 0) {
+        console.log('Video and audio combined successfully');
+        resolve(outputPath);
+      } else {
+        console.error('FFmpeg failed:', errorOutput);
+        reject(new Error(`FFmpeg failed with code ${code}: ${errorOutput}`));
+      }
+    });
+
+    ffmpeg.on('error', (error) => {
+      reject(new Error(`Failed to start FFmpeg: ${error.message}`));
+    });
+  });
 }
 
 // Function to generate approaches using Gemini
@@ -122,7 +280,6 @@ ${question}`;
     const response = await result.response;
     const text = response.text();
 
-    // Clean the response and parse as JSON
     const cleanedText = cleanJsonResponse(text);
     const approaches = JSON.parse(cleanedText);
     console.log("approaches:", approaches);
@@ -133,80 +290,98 @@ ${question}`;
   }
 }
 
-async function generateManimScript(code) {
+async function generateManimScript(code, narrationSteps) {
   const scriptId = uuidv4();
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 //   const prompt = `You are an expert in the Manim animation library.
 
-// Generate a clean, error-free Manim script that visually demonstrates the working of the given Java algorithm using a specific example input. Do not show or animate the code. The goal is to help viewers understand the algorithm visually.
+// Generate a clean, error-free Manim script that visually demonstrates the working of the given Java algorithm using a specific example input. The animation should be synchronized with the provided narration steps.
+
+// Narration Steps: ${JSON.stringify(narrationSteps)}
 
 // Constraints:
 // - Do not include or reference the original code in the video.
 // - Explain the algorithm only through animations using a step-by-step example.
 // - Use appropriate Manim classes like Rectangle, Text, VGroup, and Arrow.
 // - Animate index pointers (like i and j), variable values (like sum, count), and array traversal clearly.
+// - Each animation step should correspond to a narration step
+// - Add appropriate wait times between steps to match audio pacing (use self.wait(2) between major steps)
 // - Ensure all elements are visible within screen bounds and do not overlap.
 // - Make sure the text or any element does not overlap with each other. Everything should be clearly visible on the screen.
 // - There should be proper spacing between texts and any other element.
 // - All texts, shapes, and animations should be well-aligned and spaced.
 // - Return only the Manim Python code, nothing else. Do not include markdown formatting.
 
-// code:
+// Code:
 // ${code}
 // `;
 
-const prompt = `You are an expert in the Manim animation library specializing in algorithm visualization.
+const prompt = `You are an expert in the Manim animation library. Generate a clean, error-free Manim script that visually demonstrates the working of the given Java algorithm using a specific example input.
 
-Generate a clean, well-structured Manim script that visually demonstrates the given Java algorithm using a specific, carefully chosen example input. Focus on creating intuitive animations that explain the algorithm's logic without showing any code.
-Always starts with the approach title, then make it display in the top left corner of the screen in the small font size.
-Requirements:
-1. Visualization Approach:
-   - Use a clear example input that showcases the algorithm's key operations
-   - Example: For a sorting algorithm, use [5, 2, 4, 6, 1, 3]
-   - For graph algorithms, use a simple graph with 4-5 nodes
-   - For mathematical algorithms, choose input that demonstrates 2-3 steps
+CRITICAL REQUIREMENTS FOR ERROR-FREE CODE:
+1. Always import required Manim classes at the top: from manim import *
+2. Use proper Manim syntax and method names (e.g., Create() not create(), FadeIn() not fade_in())
+3. All animations must use self.play() to execute
+4. Use self.wait() for pauses, not wait()
+5. Ensure proper scene class inheritance from Scene
+6. Use correct positioning methods like .to_edge(), .next_to(), .shift()
+7. Always check that referenced objects exist before animating them
+8. Use proper color constants (RED, BLUE, GREEN, etc.)
 
-2. Visual Elements:
-   - Arrays: Use Rectangle elements with Text labels (like Square(side_length=1.0))
-   - Pointers: Use colored arrows (like Arrow) or labeled markers (like Text("i").next_to(element))
-   - Variables: Display important variables in a fixed position (like top-right corner)
-   - Groups: Use VGroup and HGroup for proper alignment of elements
-   - Text: Use large enough font_size (at least 24) with good contrast
+ANIMATION STRUCTURE:
+- Create a Scene class that inherits from Scene
+- Implement construct(self) method
+- Use concrete example data (e.g., array = [3, 7, 1, 9, 2] for sorting algorithms)
+- Show algorithm execution step-by-step with the example data
 
-3. Animation Sequence:
-   - Start by displaying the initial state
-   - Animate each logical step with appropriate transitions:
-     * FadeIn for new elements
-     * Transform for value changes
-     * Movement for pointer traversal
-   - Highlight comparisons/swaps/updates with color changes
-   - Pause briefly after key steps (using Wait)
+VISUAL ELEMENTS GUIDELINES:
+- Arrays: Use Rectangle objects arranged horizontally with Text labels inside
+- Pointers/Indices: Use Arrow objects pointing to array elements, with Text labels (i, j, etc.)
+- Variables: Display as Text objects in a dedicated area (top-right corner)
+- Comparisons: Highlight compared elements with color changes
+- Swaps/Moves: Use Transform or ReplacementTransform animations
+- Status Messages: Use Text objects to show current operation
 
-4. Layout Guidelines:
-   - Maintain consistent spacing (at least 0.5 units between elements)
-   - Keep all elements within the visible area (x_range [-6,6], y_range [-4,4])
-   - Use alignment tools like .arrange(RIGHT, buff=0.5) and .next_to()
-   - Group related elements and animate them together when appropriate
+SPACING AND LAYOUT:
+- Position arrays in center: array_group.move_to(ORIGIN)
+- Place variables at top-right: variables.to_edge(UP + RIGHT)
+- Position pointers below arrays with proper spacing: .shift(DOWN * 0.8)
+- Ensure minimum 0.5 unit spacing between text elements
+- Use .arrange(RIGHT, buff=0.1) for horizontal arrangement
+- Use .arrange(DOWN, buff=0.3) for vertical arrangement
 
-5. Style Requirements:
-   - Use a color scheme that's visually distinct but not overwhelming
-   - Example pointer colors: RED for 'i', BLUE for 'j', GREEN for result
-   - Add subtle highlights (like flash) for important operations
-   - Include concise text explanations when helpful (but minimal)
+ANIMATION SYNCHRONIZATION:
+- Each animation step should correspond to a narration step
+- Use self.wait(2) between major algorithm steps
+- Use self.wait(1) for minor transitions
+- Add self.wait(0.5) after highlighting elements
 
-Example Structure for a Sorting Algorithm:
-1. Create array elements
-2. Show initial pointer positions
-3. Animate comparison with color change
-4. Show swap if needed with movement animation
-5. Update pointers
-6. Repeat until sorted
+ERROR PREVENTION CHECKLIST:
+- Verify all object names match throughout the script
+- Check that all animations use self.play()
+- Ensure all waits use self.wait()
+- Confirm proper import statement
+- Validate that scene class extends Scene
+- Check method is named construct(self)
 
-Return only the complete Python code for the Manim script, without any additional explanation or markdown formatting. The code should be fully functional and follow Manim best practices for animation smoothness and clarity.
+EXAMPLE STRUCTURE:
+python
+from manim import *
 
-Java Algorithm to Visualize:
-${code}`
+class AlgorithmDemo(Scene):
+    def construct(self):
+        # Create visual elements
+        # Show initial state
+        # Step through algorithm with example
+        # Each step: animate + wait
+
+
+Narration Steps: ${JSON.stringify(narrationSteps)}
+
+Algorithm Code: ${code}
+
+Generate ONLY the Python Manim code with no markdown formatting or explanations.`;
 
   try {
     const result = await model.generateContent(prompt);
@@ -242,9 +417,10 @@ app.post('/api/analyze', async (req, res) => {
   }
 });
 
-// Route to get animation URL
+// Enhanced route to get animation URL with audio
 app.post('/api/getAnimation', async (req, res) => {
   let renderDir = null;
+  let audioFilePath = null;
   
   try {
     const { approach } = req.body;
@@ -253,14 +429,18 @@ app.post('/api/getAnimation', async (req, res) => {
     }
     
     console.log("---------------------");
-    console.log("Generating animation for approach:", approach.title);
+    console.log("Generating animation with audio for approach:", approach.title);
 
     let code = approach.code.javaCode 
         || approach.code.cppCode 
         || approach.code.pythonCode 
         || approach.code.jsCode;
 
-const { scriptContent, scriptId } = await generateManimScript(code);
+    // Generate narration steps
+    const narrationSteps = await generateNarrationSteps(code);
+    
+    // Generate Manim script with narration awareness
+    const { scriptContent, scriptId } = await generateManimScript(code, narrationSteps);
     console.log('Generated Manim script with ID:', scriptId);
 
     // Create a unique directory for this render
@@ -271,6 +451,10 @@ const { scriptContent, scriptId } = await generateManimScript(code);
     // Write the Python script to a file
     const scriptPath = path.join(renderDir, 'animation.py');
     fs.writeFileSync(scriptPath, scriptContent);
+
+    // Generate audio
+    audioFilePath = await generateAudio(narrationSteps, renderId);
+    console.log('Audio generated at:', audioFilePath);
 
     console.log(`Running Manim in directory: ${renderDir}`);
     console.log(`Script path: ${scriptPath}`);
@@ -294,17 +478,16 @@ const { scriptContent, scriptId } = await generateManimScript(code);
       errorOutput += dataStr;
     });
 
-    manim.on('close', (code) => {
+    manim.on('close', async (code) => {
       console.log(`Manim process exited with code ${code}`);
 
       if (code !== 0) {
         console.error('Manim failed with output:', output);
         console.error('Manim failed with error:', errorOutput);
         
-        // Clean up render directory on failure
-        if (renderDir) {
-          deleteDirectory(renderDir);
-        }
+        // Clean up on failure
+        if (renderDir) deleteDirectory(renderDir);
+        if (audioFilePath && fs.existsSync(audioFilePath)) fs.unlinkSync(audioFilePath);
         
         return res.status(500).json({ 
           error: `Manim failed with code ${code}`, 
@@ -320,10 +503,9 @@ const { scriptContent, scriptId } = await generateManimScript(code);
         if (!videoPath) {
           console.error('No video file found in render directory:', renderDir);
           
-          // Clean up render directory on failure
-          if (renderDir) {
-            deleteDirectory(renderDir);
-          }
+          // Clean up on failure
+          if (renderDir) deleteDirectory(renderDir);
+          if (audioFilePath && fs.existsSync(audioFilePath)) fs.unlinkSync(audioFilePath);
           
           return res.status(500).json({ 
             error: 'No video file generated',
@@ -338,32 +520,34 @@ const { scriptContent, scriptId } = await generateManimScript(code);
         const publicDir = path.join(videosDir, renderId);
         fs.mkdirSync(publicDir, { recursive: true });
 
-        // Get the video filename
+        // Combine video and audio
         const videoFileName = path.basename(videoPath);
-        const finalVideoPath = path.join(publicDir, videoFileName);
+        const baseFileName = videoFileName.replace('.mp4', '');
+        const finalVideoPath = path.join(publicDir, `${baseFileName}_with_audio.mp4`);
 
-        // Copy the video to the final location
-        fs.copyFileSync(videoPath, finalVideoPath);
+        await combineVideoAndAudio(videoPath, audioFilePath, finalVideoPath);
 
-        const videoUrl = `/videos/${renderId}/${videoFileName}`;
-        console.log(`Video successfully generated and available at: ${videoUrl}`);
+        const videoUrl = `/videos/${renderId}/${baseFileName}_with_audio.mp4`;
+        console.log(`Video with audio successfully generated and available at: ${videoUrl}`);
 
-        // CLEANUP: Delete the entire render directory since we only need the final video
+        // CLEANUP: Delete temporary files
         deleteDirectory(renderDir);
-        console.log(`Cleaned up temporary render directory: ${renderDir}`);
+        if (audioFilePath && fs.existsSync(audioFilePath)) {
+          fs.unlinkSync(audioFilePath);
+        }
+        console.log(`Cleaned up temporary files`);
 
         res.json({ videoUrl });
         
       } catch (error) {
-        console.error('Error processing video file:', error);
+        console.error('Error processing video/audio combination:', error);
         
-        // Clean up render directory on error
-        if (renderDir) {
-          deleteDirectory(renderDir);
-        }
+        // Clean up on error
+        if (renderDir) deleteDirectory(renderDir);
+        if (audioFilePath && fs.existsSync(audioFilePath)) fs.unlinkSync(audioFilePath);
         
         res.status(500).json({ 
-          error: 'Error processing generated video',
+          error: 'Error processing generated video with audio',
           details: error.message,
           output: output,
           errorOutput: errorOutput
@@ -374,10 +558,9 @@ const { scriptContent, scriptId } = await generateManimScript(code);
     manim.on('error', (error) => {
       console.error('Failed to start Manim process:', error);
       
-      // Clean up render directory on error
-      if (renderDir) {
-        deleteDirectory(renderDir);
-      }
+      // Clean up on error
+      if (renderDir) deleteDirectory(renderDir);
+      if (audioFilePath && fs.existsSync(audioFilePath)) fs.unlinkSync(audioFilePath);
       
       res.status(500).json({ 
         error: 'Failed to start Manim process',
@@ -388,13 +571,12 @@ const { scriptContent, scriptId } = await generateManimScript(code);
   } catch (error) {
     console.error('Error in /api/getAnimation:', error);
     
-    // Clean up render directory on error
-    if (renderDir) {
-      deleteDirectory(renderDir);
-    }
+    // Clean up on error
+    if (renderDir) deleteDirectory(renderDir);
+    if (audioFilePath && fs.existsSync(audioFilePath)) fs.unlinkSync(audioFilePath);
     
     res.status(500).json({ 
-      error: 'Failed to generate animation',
+      error: 'Failed to generate animation with audio',
       details: error.message
     });
   }
