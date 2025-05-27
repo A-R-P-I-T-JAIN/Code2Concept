@@ -331,7 +331,7 @@ const VideoSection = ({ approach, isPlaying, togglePlay }) => {
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="bg-[#8B7355] rounded-xl border border-[#2C2522] overflow-hidden shadow-xl h-full">
+    <div className="bg-[#c4b5a5] rounded-xl border border-[#2C2522] overflow-hidden shadow-xl h-full">
       <div className="border-b border-[#2C2522] p-4 bg-[#8B7355]">
         <h2 className="text-xl font-semibold text-[#e6ddd6]">Interactive Explanation with Audio</h2>
       </div>
