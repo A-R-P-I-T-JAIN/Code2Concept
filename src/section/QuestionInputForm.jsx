@@ -3,23 +3,23 @@ import { Sparkles } from 'lucide-react';
 
 const QuestionInputForm = ({ onGenerate, disabled }) => {
   const [questionText, setQuestionText] = useState('');
-  const [showForm, setShowForm] = useState(false);
+  const [showForm,     setShowForm]     = useState(false);
   const textareaRef = useRef(null);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (questionText.trim()) {
-      console.log('Question submitted:', questionText);
-      onGenerate({ url: questionText, type: 'url' });
-    }
-  };
-
+  // Auto-expand textarea height
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [questionText]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const trimmed = questionText.trim();
+    if (!trimmed) return;
+    onGenerate(trimmed);
+  };
 
   const placeholderText = `Example:
 
@@ -35,7 +35,7 @@ Constraints:
 -10^9 <= nums[i] <= 10^9`;
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto ">
+    <div className="w-full px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto">
       {!showForm ? (
         <button
           onClick={() => setShowForm(true)}
@@ -46,7 +46,7 @@ Constraints:
           <span>Generate DSA Explanation</span>
         </button>
       ) : (
-        <div className="bg-[#2C2522] border border-[#8B7355] p-8 rounded-xl  shadow-[0_0_15px_rgba(163,145,121,0.1)]">
+        <div className="bg-[#2C2522] border border-[#8B7355] p-8 rounded-xl shadow-[0_0_15px_rgba(163,145,121,0.1)]">
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">
               <h2 className="text-[#A39179] mb-4 text-2xl font-medium tracking-wide">
@@ -58,7 +58,8 @@ Constraints:
                   value={questionText}
                   onChange={(e) => setQuestionText(e.target.value)}
                   placeholder={placeholderText}
-                  className="w-full bg-[#1C1917] p-6 text-[#A39179] text-[#E6D5B8] placeholder-[#8B7355] focus:outline-none focus:ring-1 focus:ring-[#A39179] transition-all resize-none overflow-hidden min-h-[400px] max-h-[400px] text-base  leading-relaxed sm:text-lg font-medium disabled:opacity-50"
+                  className="w-full bg-[#1C1917] p-6 text-[#E6D5B8] placeholder-[#8B7355] focus:outline-none focus:ring-1 focus:ring-[#A39179] transition-all resize-none overflow-hidden min-h-[400px] max-h-[400px] text-base leading-relaxed sm:text-lg font-medium disabled:opacity-50"
+                  disabled={disabled}
                   required
                 />
               </div>
@@ -74,8 +75,8 @@ Constraints:
               </button>
               <button
                 type="submit"
-                disabled={!questionText.trim()}
-                className="bg-[#8B7355] hover:bg-[#A67B5B] text-[#E6D5B8] px-6 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                disabled={!questionText.trim() || disabled}
+                className="bg-[#8B7355] hover:bg-[#A67B5B] text-[#E6D5B8] px-6 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
               >
                 <Sparkles className="w-5 h-5" />
                 <span>Generate Video</span>

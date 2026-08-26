@@ -1,6 +1,7 @@
 import Navbar from './section/Navbar';
 import HomePage from './pages/HomePage';
 import DSAExplanationPage from './section/DSAExplanationPage';
+import ErrorBoundary from './components/ErrorBoundary';
 import { AppProvider, useApp } from './context/AppContext';
 import { VideoProvider } from './context/VideoContext';
 
@@ -9,8 +10,8 @@ const AppContent = () => {
 
   if (currentPage === 'explanation') {
     return (
-      <DSAExplanationPage 
-        questionData={{ ...questionData }} 
+      <DSAExplanationPage
+        questionData={{ ...questionData }}
         onBack={handleBackToHome}
       />
     );
@@ -26,11 +27,13 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <AppProvider>
-      <VideoProvider>
-        <AppContent />
-      </VideoProvider>
-    </AppProvider>
+    <ErrorBoundary>
+      <AppProvider>
+        <VideoProvider>
+          <AppContent />
+        </VideoProvider>
+      </AppProvider>
+    </ErrorBoundary>
   );
 };
 
