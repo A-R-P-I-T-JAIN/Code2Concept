@@ -86,53 +86,7 @@ sequenceDiagram
 
 ---
 
-## 3. Resume Points & Bullet Options
-
-Use these bullet points on your resume depending on the role you are targeting:
-
-### Option 1: Full-Stack / Software Engineer (Focus on Architecture & End-to-End Delivery)
-* **Code2Concept — Full-Stack AI DSA Explainer & Video Generation Platform** *(React, Node.js, Express, Python, Manim, FFmpeg, Gemini API, TailwindCSS)*
-  * Architected a full-stack media platform converting algorithm problems into interactive multi-language explanations and synchronized mathematical animations with voice narration.
-  * Designed an asynchronous job queue and polling mechanism replacing synchronous 60s+ blocking requests, eliminating HTTP 504 gateway timeouts.
-  * Built an automated self-healing pipeline that captures Manim Python runtime errors and iteratively re-prompts LLMs with stderr tracebacks, boosting rendering success rate.
-  * Implemented an in-memory client/server state-caching layer preventing duplicate LLM and rendering executions when switching between algorithm approaches.
-  * Integrated native audio-video multiplexing with FFmpeg and `pyttsx3`, automating clean-up of intermediate media artifacts to maintain zero disk leaks.
-
-### Option 2: Backend / Systems Focus (Focus on Queues, Media Pipelines & Concurrency)
-* **Code2Concept — Distributed Media Synthesis & Algorithm Visualization Engine**
-  * Engineered a non-blocking background rendering pipeline orchestrating Gemini 2.0/3.5, Python Manim subprocesses, and FFmpeg encoders.
-  * Developed exponential backoff and rate-limit retry handlers (`withGeminiRetry`) to handle bursty API workloads under tight RPM/RPD limits.
-  * Solved cross-process binary dependency issues by implementing runtime PATH injection for external video encoding engines (FFmpeg).
-  * Optimized video synthesis throughput by enforcing low-quality fast rendering flags (`-ql`) and stream copying (`-c:v copy`) during audio merging.
-
-### Option 3: AI / GenAI Engineer Focus (Focus on LLM Orchestration & Prompt Engineering)
-* **Code2Concept — Generative AI Multimodal Algorithm Tutor**
-  * Constructed structured output pipelines with Google Gemini to generate multi-lingual solution sets (Java, C++, Python, JS) and strict algorithmic narration scripts.
-  * Authored constrained metaprompts enforcing Manim AST-safe Python syntax, preventing common mobject invocation runtime errors.
-  * Automated end-to-end Text-to-Video generation by synchronizing speech-rate paced narration steps with Manim scene transitions (`self.wait` / `self.play`).
-
----
-
-## 4. Technical Interview Talking Points (STAR Method)
-
-### Question: "Describe a challenging technical problem you solved in a project."
-* **Situation**: In Code2Concept, generating algorithmic animation videos with Manim and TTS audio takes between 45 to 90 seconds per approach.
-* **Task**: Keeping the HTTP connection open caused browser timeouts, network drops, and duplicate expensive rendering jobs if the user navigated away.
-* **Action**:
-  1. Re-architected the endpoint from a synchronous model to an asynchronous Job Queue with client-side polling.
-  2. Built a multi-stage status tracker (`narration` -> `script` -> `audio` -> `render` -> `merge`) to give real-time visual progress.
-  3. Implemented a dual-key cache in React Context storing both active `jobId`s and finished `videoUrl`s, allowing users to switch tabs seamlessly without restarting background jobs.
-* **Result**: Eliminated 100% of HTTP timeout errors, decreased duplicate LLM calls to zero on tab switches, and significantly enhanced user experience.
-
-### Question: "How did you handle reliability when working with LLM-generated code?"
-* **Answer**: "LLMs frequently write Manim code that fails at runtime due to deprecated APIs or passing raw Mobjects directly to `self.play()`. Rather than failing the request, I built an automated self-healing feedback loop: if the spawned Python process exits with a non-zero code, the backend intercepts the stderr traceback, appends it as corrective context to the LLM prompt, and re-triggers the compilation. This automated retry loop resolved over 85% of initial syntax and layout failures without user intervention."
-
-### Question: "How did you design the UX for long-running background tasks?"
-* **Answer**: "Video rendering takes 30-90 seconds. To eliminate user drop-off, I designed a multi-state progress indicator that maps backend steps (`narration`, `script`, `audio`, `render`, `merge`) to a radial SVG progress bar with live animated checklist items. Additionally, I implemented optimistic Context-level caching so users can navigate between approaches or problem tabs without cancelling or duplicating in-flight renders."
-
----
-
-## 5. API Reference & Contract Specification
+## 3. API Reference & Contract Specification
 
 ### 1. `POST /api/analyze`
 Analyzes a submitted DSA problem and generates structured solution approaches.
@@ -212,7 +166,7 @@ Polls the execution state and progress of an active generation job.
 
 ---
 
-## 6. Production Scaling Roadmap (Future Enhancements)
+## 4. Production Scaling Roadmap (Future Enhancements)
 
 If asked in an interview how you would scale this application to 100,000+ daily active users:
 
